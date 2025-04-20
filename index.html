@@ -6,7 +6,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600&display=swap" rel="stylesheet">
 
   <style>
-    /* ========== BASIC STYLE ========== */
     html, body {
       margin: 0;
       padding: 0;
@@ -15,12 +14,11 @@
     }
 
     #scaler {
-      width: 1200px; /* Default reference width */
+      width: 1200px;
       margin: 0;
       transform-origin: top left;
     }
 
-    /* Page Title */
     h1 {
       margin: 0;
       font-size: 2em;
@@ -32,7 +30,6 @@
       border-bottom: 2px solid #999;
     }
 
-    /* Reel container */
     .reel {
       display: flex;
       justify-content: center;
@@ -40,7 +37,6 @@
       margin-top: 50px;
     }
 
-    /* "images" card */
     .images {
       display: flex;
       flex-direction: column;
@@ -49,12 +45,11 @@
       border: 4px solid #333;
       border-radius: 20px;
       width: 300px;
-      min-height: 380px; /* Let it expand when image is displayed */
+      min-height: 380px;
       box-sizing: border-box;
       position: relative;
     }
 
-    /* Input + button at a fixed height so button doesn't move */
     .input-section {
       display: flex;
       flex-direction: column;
@@ -66,16 +61,14 @@
       padding: 10px;
     }
 
-    /* Text input style */
     .input-section input[type="text"] {
       width: 200px;
       font-size: 40px;
       text-align: center;
       padding: 5px;
-      font-family: 'Lexend', sans-serif; /* Ensure Lexend for input */
+      font-family: 'Lexend', sans-serif;
     }
 
-    /* Search button styling */
     .input-section button {
       font-size: 24px;
       padding: 10px 20px;
@@ -85,55 +78,59 @@
       color: #fff;
       cursor: pointer;
       transition: background-color 0.2s;
-      font-family: 'Lexend', sans-serif; /* Ensure Lexend for button */
+      font-family: 'Lexend', sans-serif;
     }
+
     .input-section button:hover {
       background-color: #274db3;
     }
 
-    /* ACCORDION ANIMATION AREA */
     .result {
-      max-height: 0;                /* Collapsed by default */
+      max-height: 0;
       overflow: hidden;
       text-align: center;
       max-width: 260px;
       margin: 0 auto;
       box-sizing: border-box;
       transition: max-height 0.4s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px; /* reserve space */
     }
-    /* When .show is added, expand */
+
     .result.show {
-      max-height: 1000px;           /* Enough space to show images */
-      margin-bottom: 20px;          /* Extra spacing below */
+      max-height: 1000px;
+      margin-bottom: 20px;
     }
 
     .result img {
       max-width: 100%;
       border-radius: 8px;
       margin-top: 10px;
-      margin-bottom: 20px;          /* Additional bottom spacing */
+      margin-bottom: 20px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
     }
 
-    /* Placeholder font size for the text input (optional) */
+    .result img.loaded {
+      opacity: 1;
+    }
+
     ::-webkit-input-placeholder { font-size: 30px; }
     :-ms-input-placeholder { font-size: 30px; }
     ::placeholder { font-size: 30px; }
   </style>
 </head>
 <body>
-  <!-- Scaler container -->
   <div id="scaler">
     <h1>MY SMART VOCABULARY</h1>
 
     <div class="reel">
-      <!-- Card with input, button, and accordion result -->
       <div class="images">
         <div class="input-section">
-          <input
-            type="text"
-            id="wordInput"
-            placeholder="Enter a word..."
-          />
+          <input type="text" id="wordInput" placeholder="Enter a word..." />
           <button id="searchBtn">Search</button>
         </div>
         <div class="result" id="imageResult"></div>
@@ -142,9 +139,6 @@
   </div>
 
   <script>
-    /*****************************************************
-     * 1) SCALER FUNCTION (FROM YOUR ORIGINAL CODE)
-     *****************************************************/
     function setScale() {
       const scaler = document.getElementById('scaler');
       const availableWidth = document.documentElement.clientWidth || window.innerWidth;
@@ -156,69 +150,56 @@
     window.addEventListener('load', setScale);
     window.addEventListener('resize', setScale);
 
-    /*****************************************************
-     * 2) LOCAL IMAGE DICTIONARY
-     *****************************************************/
     const images = {
-      "dog":  "images/dog.jpeg",
-      "box": "images/box.jpeg",
-      "chair":    "images/chair.jpeg",
-      "egg":    "images/egg.jpeg",
-      "table":    "images/table.jpeg",
-      "cat":   "images/cat.jpeg"
+      "dog": "images/dog.webp",
+      "box": "images/box.webp",
+      "chair": "images/chair.webp",
+      "egg": "images/egg.webp",
+      "table": "images/table.webp",
+      "cat": "images/cat.webp"
     };
 
-    /*****************************************************
-     * 3) ACCORDION LOGIC FOR SHOW/HIDE
-     *****************************************************/
     const wordInput = document.getElementById("wordInput");
     const searchBtn = document.getElementById("searchBtn");
     const imageResult = document.getElementById("imageResult");
 
-    // (A) When the user starts typing a NEW word, collapse the currently shown image (if any)
     wordInput.addEventListener("input", () => {
       if (imageResult.classList.contains("show")) {
-        // Remove the show class to start collapsing
         imageResult.classList.remove("show");
-        // Force reflow so the transition restarts
         void imageResult.offsetHeight;
       }
     });
 
-    // (B) When the collapse animation finishes, remove the old content if it is not showing
     imageResult.addEventListener("transitionend", () => {
       if (!imageResult.classList.contains("show")) {
-        // It's fully collapsed, so remove old content
         imageResult.innerHTML = "";
       }
     });
 
-    // (C) On Search, show the new image with an accordion animation
     searchBtn.addEventListener("click", () => {
       const query = wordInput.value.trim().toLowerCase();
-      if (!query) return; // Do nothing if input is empty
+      if (!query) return;
 
-      // 1) Ensure we start from collapsed
       imageResult.classList.remove("show");
-      // Force reflow
       void imageResult.offsetHeight;
 
-      // 2) Determine new content
-      let content = "";
       if (images.hasOwnProperty(query)) {
-        content = `<img src="${images[query]}" alt="${query}" />`;
+        const img = new Image();
+        img.src = images[query];
+        img.alt = query;
+        img.onload = () => {
+          img.classList.add("loaded");
+        };
+
+        imageResult.innerHTML = ""; // clear old content
+        imageResult.appendChild(img);
+
+        void imageResult.offsetHeight;
+        imageResult.classList.add("show");
       } else {
-        content = `No local image found for "${query}".`;
+        imageResult.innerHTML = `No local image found for "${query}".`;
+        imageResult.classList.add("show");
       }
-
-      // 3) Insert new content
-      imageResult.innerHTML = content;
-
-      // 4) Force reflow again
-      void imageResult.offsetHeight;
-
-      // 5) Add .show to expand with animation
-      imageResult.classList.add("show");
     });
   </script>
 </body>
